@@ -1,0 +1,153 @@
+{
+  "theme": "light",
+  "typography": {
+    "fonts": {
+      "heading": "Outfit, sans-serif",
+      "body": "DM Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter leading-tight",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-snug",
+      "h3": "text-xl sm:text-2xl tracking-tight",
+      "h4": "text-lg sm:text-xl",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm",
+      "overline": "text-xs uppercase tracking-[0.2em] font-medium"
+    },
+    "rules": {
+      "heading_banned": ["Inter", "Roboto", "Open Sans", "Lato"],
+      "font_weights": "Use font-light for elegance and font-bold for impact. Avoid defaulting to regular weight everywhere."
+    }
+  },
+  "colors": {
+    "archetype": "ORGANIC & EARTHY",
+    "palette": {
+      "background": {
+        "primary": "#F9F6F0",
+        "secondary": "#F0EBE1",
+        "dark": "#0A170F"
+      },
+      "surface": {
+        "card": "#FFFFFF",
+        "elevated": "#F4EFE6",
+        "glass_light": "rgba(255, 255, 255, 0.7)",
+        "glass_dark": "rgba(10, 23, 15, 0.6)"
+      },
+      "brand": {
+        "primary": "#0F3821",
+        "secondary": "#D69F39",
+        "accent": "#C85A32",
+        "sage": "#8A9A5B"
+      },
+      "text": {
+        "primary": "#1A251E",
+        "secondary": "#4A5D51",
+        "tertiary": "#7C8D81",
+        "inverse": "#F9F6F0"
+      },
+      "border": {
+        "subtle": "rgba(15, 56, 33, 0.1)",
+        "strong": "rgba(15, 56, 33, 0.2)"
+      },
+      "status": {
+        "success": "#2D6A4F",
+        "warning": "#E9C46A",
+        "error": "#E63946",
+        "info": "#457B9D"
+      }
+    },
+    "rules": {
+      "forbidden_colors": ["#1B93A4", "#7351B7"],
+      "contrast": "Ensure WCAG AA compliance (4.5:1 for normal text). Use text-shadow over images. Always explicitly set hover colors.",
+      "tints": "Never use pure #000000 or #808080. Always tint greys with the primary green/warm hue."
+    }
+  },
+  "visual_enhancers": {
+    "surfaces": {
+      "cards": "Solid background (#FFFFFF) with a 1px subtle border (rgba(15, 56, 33, 0.1)). Max 12px border radius. Hover state: slight lift (-translate-y-1) and shadow-lg.",
+      "glassmorphism": "Used for sticky headers, mobile bottom nav, and floating AI assistant. backdrop-blur-xl with rgba(255, 255, 255, 0.7) and a 1px solid inner border (rgba(255, 255, 255, 0.4)). Never use complete transparency."
+    },
+    "textures": "Subtle paper grain/noise overlay on the cinematic landing page to break digital flatness.",
+    "icons": "Use @phosphor-icons/react (Duotone style for premium feel, Regular for dense data)."
+  },
+  "components": {
+    "button": "Pill-shaped (rounded-full) for primary actions, subtle hover lift and color transition. Primary CTA uses brand primary (#0F3821) with inverse text.",
+    "cards": "Premium cards with generous internal padding (p-6 to p-8). Avoid generic dropshadows. Use 1px borders and colored accents.",
+    "navigation": "Desktop: Fixed Sidebar for Dashboards. Mobile: Glassmorphic Bottom Navigation. Landing Page: Sticky glassmorphic header.",
+    "inputs": "Use Shadcn customized components. Solid borders, active ring in brand secondary.",
+    "video_player": "Used in the Tutorial center. Custom controls, subtle shadow, rounded-2xl.",
+    "floating_ai": "KrishiAI assistant accessible via floating circular button with pulsing rings, opens a sliding/popover glass chat interface."
+  },
+  "grids_and_layouts": {
+    "spacing": "Generous Spacing Philosophy: p-4 to p-12. Use 2-3x more spacing than typical defaults.",
+    "bento_grid": "For dashboards: grid-cols-1 md:grid-cols-3 lg:grid-cols-4 with gap-6. Summary cards col-span-1, charts col-span-2 or 3.",
+    "hero_section": "Cinematic split or full-screen with max overlay bg-black/40 (if using image) to keep subjects visible.",
+    "split_screen": "Login/Signup should use a premium split-screen layout: left side form, right side cinematic agricultural storytelling image.",
+    "mobile_first": "Ensure all layout grids default to grid-cols-1. Max image height on mobile is 80vh."
+  },
+  "motion": {
+    "landing_page": "High motion: Use Lenis for smooth scrolling. Parallax on the hero section. Staggered fade-up for features.",
+    "dashboards": "Minimalist motion: Staggered entry for lists, hover state lifts for cards. Do not overload with distracting animations.",
+    "accessibility": "CRITICAL: Respect prefers-reduced-motion. Disable all non-essential animations when requested. Provide static fallback for hero video."
+  },
+  "media": {
+    "image_urls": {
+      "hero_background": {
+        "url": "https://images.unsplash.com/photo-1561319612-04c209af8e35?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzR8MHwxfHNlYXJjaHwzfHxpbmRpYW4lMjBhZ3JpY3VsdHVyZSUyMGZhcm0lMjBzdW5zZXR8ZW58MHx8fHwxNzg0MzY2NDg5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Green corn field under sunrise. Use for the cinematic landing page fallback or main hero image.",
+        "category": "hero"
+      },
+      "modern_farmer": {
+        "url": "https://images.pexels.com/photos/4975400/pexels-photo-4975400.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Mature farmer standing in lush sunflower field using a tablet. Use for technology feature or split-screen login.",
+        "category": "feature"
+      },
+      "harvest": {
+        "url": "https://images.pexels.com/photos/9117894/pexels-photo-9117894.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Close-up of hands pulling freshly harvested onions. Use for Market or Exchange section.",
+        "category": "market"
+      },
+      "cofounder_aman": {
+        "url": "https://images.unsplash.com/photo-1574281570877-bd815ebb50a4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBpbmRpYW4lMjBtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3ODQzNjY0ODl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Portrait of a confident man with crossed arms. Use for Aman Barnwal in the About section.",
+        "category": "team"
+      },
+      "cofounder_swastika": {
+        "url": "https://images.pexels.com/photos/7580822/pexels-photo-7580822.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Confident woman in business attire smiling. Use for Swastika Kumari in the About section.",
+        "category": "team"
+      }
+    },
+    "video": {
+      "hero_video": "For the cinematic hero background, implement a subtle, high-quality looping video of Indian agriculture. Ensure to wrap with Suspense and provide the 'hero_background' image as a poster and fallback."
+    }
+  },
+  "libraries_and_3d": {
+    "ui_components": "shadcn/ui (highly customized). Do not use generic html elements for complex interactive elements.",
+    "icons": "yarn add @phosphor-icons/react",
+    "motion": "framer-motion for interactions, react-spring if needed for parallax.",
+    "scroll": "@studio-freight/react-lenis for premium momentum scrolling on the landing page.",
+    "charts": "recharts or shadcn charts for Mandi prices and demand analytics.",
+    "toast": "sonner for all alerts and notifications."
+  },
+  "accessibility": {
+    "contrast": "Must meet APCA/WCAG AA standards. Text on images MUST have text-shadow.",
+    "interactions": "All interactive elements (buttons, links, form inputs) MUST include data-testid. Example: data-testid='login-submit-button'.",
+    "motion": "Respect prefers-reduced-motion media query globally.",
+    "focus": "High-contrast focus rings for keyboard navigation."
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic outputs. Avoid the 'AI slop' aesthetic. Make it premium and deeply tied to the Indian agricultural context, showing dignity, not charity.",
+    "Do not use dark colors as gradients. Use solid colors or very subtle monochromatic gradients.",
+    "Create depth through layered design elements with z-index hierarchy and glassmorphism (12-24px blur).",
+    "NEVER apply 'transition: all'. Apply transitions to specific properties (e.g., transform, opacity, background-color).",
+    "Do NOT center align the app container (.App { text-align: center; } is banned). Readability is key.",
+    "NEVER use emojis as icons. Use the specified icon library (@phosphor-icons/react).",
+    "Every interaction needs micro-animations (hover states, transitions). Static is dead.",
+    "Use 2-3x more spacing than typical defaults.",
+    "Do NOT use transparent backgrounds for dropdowns, overlays, or sticky headers. Ensure content beneath does not make text unreadable.",
+    "Implement the 22-language selection smartly (e.g., a nice globe or dropdown in the header).",
+    "Ensure 'data-testid' is on all interactive and informational elements for robust testing."
+  ]
+}

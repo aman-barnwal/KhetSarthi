@@ -1,0 +1,49 @@
+{
+  "summary": "First E2E test of Krishiyog. Wrote comprehensive pytest suite (41 tests) covering auth, admin single-ID login (AmanSwastika), role enforcement (403s), demand/supply with match notifications, marketplace + enquiries lifecycle, Agmarknet mandi prices, admin managed prices (CRUD + bulk %/set), admin vendors (create/verify/soft-remove), weather + geocode search, KrishiAI SSE streaming (real Gemini tokens received), crop scan with real JPEG (structured JSON returned), CRUD flows, schemes, search, notifications, profile lang update, forgot/reset password. Frontend flows: landing→auth→farmer login→dashboard→prices/weather/AI/demand/schemes verified end-to-end, admin login by ID → admin panel with Prices/Vendors/Users/Moderation tabs, voice assistant FAB+panel. Fixed 2 critical bugs and 3 propagated bugs in the codebase.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "All flows working. Testing agent already applied 5 fixes (see updated_files) — main agent should review the changes and confirm.",
+    "Optional: consider a persistent User-Agent header on all outbound httpx calls in services.py (currently only MarketPriceService sets one) to guard against upstreams that reject default python-httpx UA."
+  ],
+  "critical_code_review_comments": [
+    "FIXED (was CRITICAL): Admin.js/Crops.js/Expenses.js/Notifications.js all had `useEffect(load, [])` where `load` returns a Promise. React tried to invoke the returned Promise as a cleanup fn → 'TypeError: destroy is not a function' overlay covered the whole Admin page, making it completely unusable. Wrapped each call as `useEffect(() => { load(); }, [])`.",
+    "FIXED (was CRITICAL): services.py MarketPriceService — data.gov.in Agmarknet API (a) blocks httpx's default User-Agent (silent hang → ReadTimeout) and (b) changed schema to lowercase filter keys ('filters[commodity]' not 'filters[Commodity.keyword]') and lowercase response keys ('state', 'min_price'). Added explicit UA header and updated key mapping. Mandi prices page was returning 'unavailable' for every query.",
+    "OK: single-admin policy in server.py demotes any other admin accounts on startup (correct).",
+    "OK: role enforcement (require_role) returns 403 correctly for /demand, /harvests, /admin/*.",
+    "OK: MongoDB `_id` is serialized to `id` via serialize()/public_user() consistently.",
+    "OK: JWT + httpOnly cookies with samesite=none secure=true; Bearer fallback wired via Authorization header.",
+    "OBSERVATION: get_current_user does not use a refresh_token flow — refresh cookie is issued but never consumed. Not blocking, but worth adding a /auth/refresh endpoint later.",
+    "OBSERVATION: some pages (Onboarding step math on line 17) infer step from user state but assume language is set only when role is too — works but a bit fragile."
+  ],
+  "updated_files": [
+    "/app/backend/services.py (MarketPriceService: UA header + lowercase filter/response keys)",
+    "/app/frontend/src/pages/Admin.js (3× useEffect fix)",
+    "/app/frontend/src/pages/Crops.js (useEffect fix)",
+    "/app/frontend/src/pages/Expenses.js (useEffect fix)",
+    "/app/frontend/src/pages/Notifications.js (useEffect fix)",
+    "/app/backend/tests/backend_test.py (new — 41 tests)",
+    "/app/backend/tests/__init__.py (new)"
+  ],
+  "success_rate": {"backend": "100% (41/41)", "frontend": "100% for tested flows (7 pages + admin sub-tabs + voice FAB)"},
+  "test_credentials": "See /app/memory/test_credentials.md — admin AmanSwastika/SwastikaAman@2026010405, farmer@test.com/Farmer@123, vendor@test.com/Vendor@123. All accounts already onboarded during tests.",
+  "seed_data_creation": "farmer@test.com and vendor@test.com created via /api/auth/register and onboarded via PUT /api/profile. Multiple test demand posts, harvests, listings, enquiries, notifications, crops, expenses, reminders, managed_price rows and a TEST_BulkAgri vendor (soft-removed) were created. Data safe to leave (prefixed with TEST_ where identifiable).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 41 backend pytest cases pass. Admin panel was previously broken by a React useEffect Promise-return anti-pattern in 4 files — fixed. Mandi prices (data.gov.in Agmarknet) was previously returning 'unavailable' due to (a) httpx UA being blocked and (b) upstream schema change to lowercase filter/response keys — both fixed and verified live. Voice Assistant FAB+panel opens correctly (mic itself can't be tested headless). Geolocation is denied in headless browser (expected) and weather page shows graceful 'Location permission was denied. Search for your place instead.' with working search-by-place. KrishiAI SSE stream verified to deliver real Gemini text (tested prompt 'when should I sow wheat?' → coherent November answer streamed).",
+  "rca_of_the_issue": {
+    "admin_panel_blank": "useEffect(load, []) where load returns Promise → React treats Promise as cleanup fn → 'destroy is not a function' on unmount. Repro: log in as admin and visit /admin. Mitigation: wrap in arrow: useEffect(() => { load(); }, []).",
+    "mandi_prices_unavailable": "MarketPriceService async httpx call to https://api.data.gov.in/... hung (ReadTimeout) because the upstream rejects the default 'python-httpx/x.y' User-Agent (server never returns headers). Adding any explicit UA fixes it. Also filter/response schema changed to lowercase keys. Mitigation: set headers={'User-Agent': 'Krishiyog/1.0'} on AsyncClient and update filter keys + response mapping."
+  }
+}

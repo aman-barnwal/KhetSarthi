@@ -1,0 +1,323 @@
+import os
+import json
+import time
+import logging
+import httpx
+
+logger = logging.getLogger("services")
+
+_cache = {}
+
+
+def cache_get(key, ttl):
+    item = _cache.get(key)
+    if item and time.time() - item[0] < ttl:
+        return item[1]
+    return None
+
+
+def cache_set(key, value):
+    _cache[key] = (time.time(), value)
+
+
+class WeatherService:
+    """Provider: Open-Meteo (free, no key). Replaceable."""
+    BASE = "https://api.open-meteo.com/v1/forecast"
+
+    @classmethod
+    async def get_forecast(cls, lat: float, lon: float) -> dict:
+        key = f"wx:{round(lat,2)}:{round(lon,2)}"
+        cached = cache_get(key, 900)
+        if cached:
+            return cached
+        params = {
+            "latitude": lat, "longitude": lon, "timezone": "auto",
+            "current": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,is_day",
+            "hourly": "temperature_2m,precipitation_probability,weather_code,wind_speed_10m,relative_humidity_2m",
+            "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,wind_speed_10m_max",
+            "forecast_days": 7,
+        }
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get(cls.BASE, params=params)
+            r.raise_for_status()
+            data = r.json()
+        result = {"source": "Open-Meteo", "data": data, "advisories": cls.build_advisories(data)}
+        cache_set(key, result)
+        return result
+
+    @staticmethod
+    def build_advisories(data: dict) -> list:
+        adv = []
+        cur = data.get("current", {})
+        daily = data.get("daily", {})
+        hourly = data.get("hourly", {})
+        rain_prob_today = (daily.get("precipitation_probability_max") or [0])[0]
+        wind = cur.get("wind_speed_10m", 0)
+        humidity = cur.get("relative_humidity_2m", 0)
+        temp_max = (daily.get("temperature_2m_max") or [0])[0]
+        rain_next_48 = sum((daily.get("precipitation_sum") or [0, 0])[:2])
+        if rain_prob_today >= 60:
+            adv.append({"type": "spray_delay", "severity": "warning",
+                        "key": "adv_rain_spray"})
+        if wind and wind > 20:
+            adv.append({"type": "wind", "severity": "warning", "key": "adv_wind_spray"})
+        if humidity and humidity > 80:
+            adv.append({"type": "fungal", "severity": "info", "key": "adv_humidity_fungal"})
+        if temp_max and temp_max > 38:
+            adv.append({"type": "heat", "severity": "warning", "key": "adv_heat_irrigation"})
+        if rain_next_48 < 1 and rain_prob_today < 30:
+            adv.append({"type": "irrigation", "severity": "info", "key": "adv_dry_irrigation"})
+        probs = hourly.get("precipitation_probability") or []
+        if probs and max(probs[:24] or [0]) >= 70:
+            adv.append({"type": "rain_alert", "severity": "info", "key": "adv_rain_soon"})
+        return adv
+
+
+class GeocodingService:
+    """Forward: Open-Meteo geocoding (free). Reverse: Nominatim/OSM (rate-limited, attribution required). Replaceable."""
+
+    @staticmethod
+    async def search(q: str) -> list:
+        async with httpx.AsyncClient(timeout=15) as client:
+            r = await client.get("https://geocoding-api.open-meteo.com/v1/search",
+                                 params={"name": q, "count": 6, "language": "en", "format": "json"})
+            r.raise_for_status()
+            results = r.json().get("results") or []
+        return [{"name": x.get("name"), "lat": x.get("latitude"), "lon": x.get("longitude"),
+                 "state": x.get("admin1"), "district": x.get("admin2"), "country": x.get("country")}
+                for x in results]
+
+    @staticmethod
+    async def reverse(lat: float, lon: float) -> dict:
+        key = f"rev:{round(lat,3)}:{round(lon,3)}"
+        cached = cache_get(key, 86400)
+        if cached:
+            return cached
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                r = await client.get("https://nominatim.openstreetmap.org/reverse",
+                                     params={"lat": lat, "lon": lon, "format": "json", "zoom": 12, "accept-language": "en"},
+                                     headers={"User-Agent": "Krishiyog/1.0 (agri platform)"})
+                r.raise_for_status()
+                a = r.json().get("address", {})
+            result = {
+                "village": a.get("village") or a.get("town") or a.get("suburb") or a.get("city"),
+                "district": a.get("state_district") or a.get("county") or a.get("district"),
+                "state": a.get("state"),
+                "source": "OpenStreetMap Nominatim",
+            }
+            cache_set(key, result)
+            return result
+        except Exception as e:
+            logger.warning(f"reverse geocode failed: {e}")
+            return {"village": None, "district": None, "state": None, "source": None}
+
+
+class MarketPriceService:
+    """Provider: data.gov.in Agmarknet daily mandi prices. Replaceable."""
+    RESOURCE = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070"
+
+    @classmethod
+    async def get_prices(cls, state=None, district=None, commodity=None, limit=50, offset=0) -> dict:
+        api_key = os.environ.get("DATA_GOV_API_KEY")
+        if not api_key:
+            return {"available": False, "reason": "not_configured", "records": []}
+        params = {"api-key": api_key, "format": "json", "limit": min(limit, 200), "offset": offset}
+        # data.gov.in now uses lowercase filter keys (schema change)
+        if state:
+            params["filters[state]"] = state
+        if district:
+            params["filters[district]"] = district
+        if commodity:
+            params["filters[commodity]"] = commodity
+        cache_key = f"mandi:{state}:{district}:{commodity}:{limit}:{offset}"
+        cached = cache_get(cache_key, 1800)
+        if cached:
+            return cached
+        try:
+            # data.gov.in blocks default python-httpx User-Agent — set explicit UA
+            async with httpx.AsyncClient(timeout=25, headers={"User-Agent": "Krishiyog/1.0"}) as client:
+                r = await client.get(cls.RESOURCE, params=params)
+                r.raise_for_status()
+                data = r.json()
+            records = []
+            for rec in data.get("records", []):
+                # response keys are lowercase in the current API schema
+                records.append({
+                    "state": rec.get("state") or rec.get("State"),
+                    "district": rec.get("district") or rec.get("District"),
+                    "market": rec.get("market") or rec.get("Market"),
+                    "commodity": rec.get("commodity") or rec.get("Commodity"),
+                    "variety": rec.get("variety") or rec.get("Variety"),
+                    "grade": rec.get("grade") or rec.get("Grade"),
+                    "arrival_date": rec.get("arrival_date") or rec.get("Arrival_Date"),
+                    "min_price": rec.get("min_price") or rec.get("Min_Price"),
+                    "max_price": rec.get("max_price") or rec.get("Max_Price"),
+                    "modal_price": rec.get("modal_price") or rec.get("Modal_Price"),
+                })
+            result = {"available": True, "total": data.get("total", len(records)),
+                      "updated": data.get("updated_date"), "source": "data.gov.in (Agmarknet)",
+                      "records": records}
+            cache_set(cache_key, result)
+            return result
+        except Exception as e:
+            logger.error(f"mandi price fetch failed: {e}")
+            return {"available": False, "reason": "unavailable", "records": []}
+
+
+LANG_NAMES = {
+    "en": "English", "hi": "Hindi", "bn": "Bengali", "te": "Telugu", "mr": "Marathi",
+    "ta": "Tamil", "gu": "Gujarati", "kn": "Kannada", "ml": "Malayalam", "pa": "Punjabi",
+    "or": "Odia", "as": "Assamese", "ur": "Urdu", "mai": "Maithili", "sat": "Santali",
+    "ks": "Kashmiri", "ne": "Nepali", "sd": "Sindhi", "kok": "Konkani", "doi": "Dogri",
+    "mni": "Manipuri", "brx": "Bodo", "sa": "Sanskrit",
+}
+
+KRISHI_SYSTEM = """You are KrishiAI, the multilingual agricultural assistant of KhetSarthi ("हर खेत का सारथी"), a digital platform for Indian farmers.
+About KhetSarthi: it was co-founded by Aman Barnwal and Swastika Kumari, who started this journey together in college to solve the problems Indian farmers face with technology. They are the ONLY two co-founders. If asked who made you or which company/AI you belong to, answer: you are KrishiAI, built by the KhetSarthi team. NEVER mention any underlying AI provider, model name, or third-party company.
+Rules:
+- Reply in {language}. Keep answers short, practical and in simple words a farmer understands.
+- You help with: crops, farming practices, weather interpretation, pests/diseases, mandi prices, government schemes, farm records, and navigating the KhetSarthi app.
+- Never present uncertain agricultural advice as guaranteed fact. Say "likely" / "possible" where appropriate.
+- For serious crop loss risk, pesticide dosage, or safety issues, recommend consulting a local Krishi Vigyan Kendra (KVK) or agricultural expert.
+- Never invent government schemes, deadlines, prices, or statistics. If unsure, say so.
+- This is decision support, not a guarantee."""
+
+SCAN_PROMPT = """You are an agricultural crop-health vision assistant. Analyze the crop/leaf/pest image.
+Context: crop={crop_type}, symptoms reported={symptoms}, growth stage={growth_stage}.
+Respond ONLY with valid JSON (no markdown fences) with keys:
+{{"probable_conditions": [{{"name": str, "confidence": "high|medium|low", "description": str}}],
+"visible_symptoms": [str], "possible_causes": [str], "recommended_actions": [str],
+"prevention": [str], "expert_consultation_advised": bool, "disclaimer_note": str}}
+Write all text values in {language}. This is informational guidance, NOT a definitive diagnosis. If the image is not a crop/plant/pest, set probable_conditions to [] and explain in disclaimer_note."""
+
+
+class AIService:
+    """Provider adapter: Gemini primary, Groq (OpenAI-compatible) fallback."""
+
+    @staticmethod
+    def configured() -> bool:
+        return bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GROQ_API_KEY"))
+
+    @staticmethod
+    async def stream_chat(message: str, session_id: str, language: str, history: list):
+        provider = os.environ.get("AI_PROVIDER", "gemini")
+        lang_name = LANG_NAMES.get(language, "English")
+        system = KRISHI_SYSTEM.format(language=lang_name)
+        context = ""
+        if history:
+            turns = [f"{'User' if h['role']=='user' else 'KrishiAI'}: {h['content']}" for h in history[-6:]]
+            context = "Previous conversation:\n" + "\n".join(turns) + "\n\n"
+        if provider == "gemini" and os.environ.get("GEMINI_API_KEY"):
+            try:
+                async for chunk in AIService._gemini_stream(system, context + message, session_id):
+                    yield chunk
+                return
+            except Exception as e:
+                logger.error(f"gemini stream failed: {e}")
+        async for chunk in AIService._groq_stream(system, context + message):
+            yield chunk
+
+    @staticmethod
+    async def _gemini_stream(system: str, message: str, session_id: str):
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+        model = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+
+        response = await client.aio.models.generate_content_stream(
+            model=model,
+            contents=message,
+            config=types.GenerateContentConfig(
+                system_instruction=system,
+            ),
+        )
+
+        async for chunk in response:
+            if chunk.text:
+                yield chunk.text
+
+    @staticmethod
+    async def _groq_stream(system: str, message: str):
+        key = os.environ.get("GROQ_API_KEY")
+        if not key:
+            yield "AI is not configured yet. Please add an API key in the server settings."
+            return
+        payload = {"model": os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                   "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
+                   "stream": True, "max_tokens": 1024}
+        async with httpx.AsyncClient(timeout=60) as client:
+            async with client.stream("POST", "https://api.groq.com/openai/v1/chat/completions",
+                                     headers={"Authorization": f"Bearer {key}"}, json=payload) as r:
+                async for line in r.aiter_lines():
+                    if line.startswith("data: ") and line != "data: [DONE]":
+                        try:
+                            delta = json.loads(line[6:])["choices"][0]["delta"].get("content")
+                            if delta:
+                                yield delta
+                        except Exception:
+                            pass
+
+
+class VisionService:
+    """Crop scan via Gemini multimodal. Replaceable with specialized agri models later."""
+
+    @staticmethod
+    async def analyze_crop(image_base64: str, ctx) -> dict:
+        if not os.environ.get("GEMINI_API_KEY"):
+            return {"available": False, "reason": "not_configured"}
+        from google import genai
+        from google.genai import types
+        import base64
+
+        lang_name = LANG_NAMES.get(ctx.language or "en", "English")
+        prompt = SCAN_PROMPT.format(
+            crop_type=ctx.crop_type or "unknown",
+            symptoms=ctx.symptoms or "not provided",
+            growth_stage=ctx.growth_stage or "unknown",
+            language=lang_name,
+        )
+
+        raw_image = image_base64
+        mime_type = "image/jpeg"
+
+        if image_base64.startswith("data:"):
+            header, raw_image = image_base64.split(",", 1)
+            mime_type = header.split(";")[0].split(":", 1)[1]
+
+        image_bytes = base64.b64decode(raw_image)
+
+        client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+        model = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+
+        response = await client.aio.models.generate_content(
+            model=model,
+            contents=[
+                prompt,
+                types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type=mime_type,
+                ),
+            ],
+            config=types.GenerateContentConfig(
+                system_instruction="You output only valid JSON.",
+                response_mime_type="application/json",
+            ),
+        )
+
+        text = response.text or ""
+        cleaned = text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        try:
+            parsed = json.loads(cleaned.strip())
+            return {"available": True, "result": parsed}
+        except Exception:
+            logger.error(f"scan JSON parse failed: {text[:200]}")
+            return {"available": True, "result": {
+                "probable_conditions": [], "visible_symptoms": [], "possible_causes": [],
+                "recommended_actions": [], "prevention": [], "expert_consultation_advised": True,
+                "disclaimer_note": text[:800] or "Analysis could not be structured. Please retry."}}

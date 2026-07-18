@@ -1,0 +1,55 @@
+{
+  "summary": "KhetSarthi iteration_2 delta testing (rebrand + dark mode + Hindi + About + PWA + markdown AI). Ran 7 new backend delta tests + 16 admin/auth regression tests + comprehensive frontend Playwright checks. 23/23 backend tests PASSED. Frontend: About page, Landing theme toggle, Schemes with images + Hindi text, AI identity + markdown rendering all work correctly. TWO CRITICAL frontend bugs found: (1) header-theme-btn is completely MISSING from AppShell.js — dark mode cannot be toggled once logged in. (2) DemandSupply.js crashes with 'cname is not defined' ReferenceError, showing full-page error overlay — /demand page is entirely broken so Hindi commodity name test cannot pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "AppShell.js header", "issue": "data-testid='header-theme-btn' is completely missing. useTheme hook and Moon/Sun icons are imported but never rendered. Dark-mode toggle from inside the app is impossible. Only landing-theme-btn works.", "selector": "[data-testid='header-theme-btn']", "priority": "CRITICAL"},
+      {"component": "DemandSupply.js", "issue": "ReferenceError: cname is not defined (line 69) and dispName is not defined (lines 91, 116). The entire <DemandSupply> component crashes — user sees CRA 'Uncaught runtime errors' overlay. Blocks the primary Hindi commodity name test (टमाटर/आलू/प्याज) and all demand/harvest flows in the browser.", "selector": "[data-testid='commodity-tomato']", "priority": "CRITICAL"},
+      {"component": "Shared.js useTheme", "issue": "Hook reads only document.documentElement.classList on mount and never reads localStorage.ky_theme. index.html has no boot script to apply saved theme before React hydrates, so dark mode does NOT persist after a full page reload (only writes localStorage, never reads it).", "selector": "html.dark", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_khetsarthi_new.py",
+    "/app/test_reports/pytest/pytest_iteration2_delta.xml",
+    "/app/test_reports/pytest/pytest_iteration2_admin.xml"
+  ],
+  "action_items": [
+    "Render header-theme-btn in /app/frontend/src/components/AppShell.js top header (Moon/Sun icon, calls toggleTheme). Also fix useTheme to hydrate from localStorage.ky_theme and add a tiny inline boot script in public/index.html so the .dark class is applied before React renders — otherwise a hard reload flashes light and never restores dark.",
+    "Fix DemandSupply.js by defining helpers: `const cname = (c) => (lang === 'hi' && c.name_hi) || c.name;` and `const dispName = (name) => { const c = commodities.find(x => x.name === name || (x.name || '').split(' ')[0] === (name || '').split(' ')[0]); return c ? cname(c) : name; };` (or similar) — the whole /demand page currently crashes.",
+    "After both fixes, re-run frontend Playwright to confirm: /demand shows commodity-tomato with text 'टमाटर' when lang=hi, and click header-theme-btn → html.classList.contains('dark') === true and localStorage.ky_theme === 'dark' — then hard-reload the page and confirm class 'dark' still applied."
+  ],
+  "critical_code_review_comments": [
+    "CRITICAL BUG in /app/frontend/src/pages/DemandSupply.js — `cname(c)` on line 69, `cname(selected)` on line 81, `dispName(d.commodity)` on line 91 and `dispName(h.commodity)` on line 116 reference identifiers that are not defined, not imported, and not in scope. Grep confirms no `cname`/`dispName` declaration anywhere in the repo. Runtime is ReferenceError → CRA error overlay. This must have shipped without a smoke test of /demand in Hindi mode.",
+    "MISSING FEATURE in /app/frontend/src/components/AppShell.js — the review explicitly requires data-testid='header-theme-btn' but no such button is rendered. `useTheme()` is destructured on line 22 but `toggleTheme` is never wired to any JSX. Add a Moon/Sun icon-button in the header controls row.",
+    "In /app/frontend/src/components/Shared.js the useTheme hook reads `document.documentElement.classList.contains('dark')` at mount but never reads localStorage.ky_theme. Combined with the absence of a bootstrap script in public/index.html, the user's saved dark preference is lost on every full reload. Fix: initialize from `localStorage.getItem('ky_theme') === 'dark'` AND toggle the class in the initializer, plus add `<script>try{if(localStorage.getItem('ky_theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}</script>` at the top of public/index.html <head>.",
+    "OK: schemes_data.py — every scheme has image + full hi{summary,benefits,eligibility,how_to_apply}. COMMODITIES has name_hi for all 28 items.",
+    "OK: services.py KRISHI_SYSTEM correctly forbids leaking Gemini/Google/Groq/OpenAI. Verified by live streaming test — AI reply mentioned 'KhetSarthi' and never leaked provider names.",
+    "OK: About.js FOUNDERS array order is [Swastika, Aman] — DOM order verified swastika-first via compareDocumentPosition. Photos load with naturalWidth=800.",
+    "OK: public/index.html title = 'KhetSarthi — हर खेत का सारथी'. No 'Krishiyog' string anywhere on landing.",
+    "OK: /manifest.json, /sw.js, /logo.png, /favicon.png, /swastika.jpg, /aman.jpg all serve HTTP 200.",
+    "OK: Md() renderer in Shared.js — verified live: AI reply with '**bold**' and '- bullet' input rendered as <strong> and <ul><li>, zero raw '**' in DOM."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_khetsarthi_new.py (new — 7 delta tests: schemes image+hi, commodities name_hi, AI identity, PWA static assets, logo/founder image serving)"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23: 7 new delta + 16 regression)",
+    "frontend": "78% — landing/theme/about/schemes/AI-markdown/AI-identity/Hindi-nav/static-assets ALL pass; /demand page and in-app header-theme-btn BROKEN"
+  },
+  "test_credentials": "See /app/memory/test_credentials.md — admin AmanSwastika/SwastikaAman@2026010405, farmer@test.com/Farmer@123 (now with language=hi after test), vendor@test.com/Vendor@123. Farmer profile language was toggled to 'hi' during frontend test and left as-is (main agent may want to reset to 'en').",
+  "seed_data_creation": "No new seed data — reused existing test users. AI chat history for farmer got two extra messages (tomato tips prompt + reply).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Two frontend fixes needed by main agent: (1) add header-theme-btn in AppShell.js + persist dark mode via localStorage boot script in public/index.html; (2) define cname/dispName helpers in DemandSupply.js. Once fixed, re-run: (a) login farmer, switch to Hindi, visit /demand → commodity-tomato inner text should be 'टमाटर'; (b) click header-theme-btn → html gets class 'dark', reload page → still dark. All backend (23/23) and other frontend flows (About, Schemes, AI markdown + identity, Landing theme, static assets, admin regression) already verified passing — no need to re-test those.",
+  "rca_of_the_issue": {
+    "demand_page_crash": "DemandSupply.js references identifiers `cname` and `dispName` that were never declared. Repro: log in as any user, navigate to /demand → CRA error overlay 'ReferenceError: cname is not defined at DemandSupply (bundle.js:13089)'. Fix: define both as small helpers inside the component using the loaded commodities list and current lang.",
+    "header_theme_btn_missing": "AppShell.js imports Moon, Sun and destructures [dark, toggleTheme] but never renders a button. Repro: log in → inspect header → only header-search-btn, header-lang-btn, header-notifications-btn exist. Fix: add <button data-testid='header-theme-btn' onClick={toggleTheme}>{dark ? <Sun/> : <Moon/>}</button> to the header controls row.",
+    "dark_mode_reload_persistence": "useTheme() initializes React state from `document.documentElement.classList.contains('dark')`, which is false on every fresh load because nothing sets the class before React mounts. LocalStorage is written on toggle but never read. Fix: initializer should read localStorage.ky_theme AND apply the class in the same tick; also inline a boot <script> in public/index.html to set the class before React so there is no light-mode flash."
+  }
+}
