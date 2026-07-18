@@ -8,6 +8,17 @@ import { toast } from "sonner";
 
 const CAT_ICONS = { vegetables: Carrot, fruits: Orange, grains: Grains, pulses: GrainsSlash, spices: Pepper, oilseeds: Plant, other: Package };
 
+const cname = (commodity) => {
+  if (!commodity) return "";
+  return commodity.name || commodity.name_en || commodity.key || "";
+};
+
+const dispName = (commodity) => {
+  if (!commodity) return "";
+  if (typeof commodity === "string") return commodity;
+  return commodity.name || commodity.name_en || commodity.key || "";
+};
+
 export default function DemandSupply() {
   const { t } = useI18n();
   const { user } = useAuth();

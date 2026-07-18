@@ -101,20 +101,8 @@ export default function VoiceAssistant() {
       }
     };
     rec.onerror = (e) => {
-      console.error("SpeechRecognition error:", e.error, e);
       setListening(false);
-
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-        setError(t("mic_denied"));
-      } else if (e.error === "no-speech") {
-        setError("No speech detected. Please try again.");
-      } else if (e.error === "audio-capture") {
-        setError("Microphone could not be accessed.");
-      } else if (e.error === "network") {
-        setError("Browser speech recognition service is unavailable. Try Google Chrome.");
-      } else {
-        setError(`Voice recognition failed: ${e.error || "unknown error"}`);
-      }
+      setError(e.error === "not-allowed" ? t("mic_denied") : t("error_generic"));
     };
     rec.onend = () => setListening(false);
     rec.start();
