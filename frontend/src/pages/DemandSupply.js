@@ -8,19 +8,53 @@ import { toast } from "sonner";
 
 const CAT_ICONS = { vegetables: Carrot, fruits: Orange, grains: Grains, pulses: GrainsSlash, spices: Pepper, oilseeds: Plant, other: Package };
 
-const cname = (commodity) => {
+const cname = (commodity, lang) => {
   if (!commodity) return "";
-  return commodity.name || commodity.name_en || commodity.key || "";
+
+  if (lang === "hi") {
+    return commodity.name_hi ||
+           commodity.name ||
+           commodity.name_en ||
+           commodity.key ||
+           "";
+  }
+
+  return commodity.name ||
+         commodity.name_en ||
+         commodity.key ||
+         "";
 };
 
-const dispName = (commodity) => {
+const dispName = (commodity, lang, commodities = []) => {
   if (!commodity) return "";
-  if (typeof commodity === "string") return commodity;
-  return commodity.name || commodity.name_en || commodity.key || "";
+
+  // API demand/harvest records may contain only a string commodity name
+  if (typeof commodity === "string") {
+    if (lang === "hi") {
+      const normalized = commodity.toLowerCase().trim();
+
+      const match = commodities.find((c) => {
+        const english = (c.name || "").toLowerCase().trim();
+        const key = (c.key || "").toLowerCase().trim();
+
+        return (
+          english === normalized ||
+          key === normalized ||
+          english.split(" ")[0] === normalized
+        );
+      });
+
+      return match?.name_hi || commodity;
+    }
+
+    return commodity;
+  }
+
+  return cname(commodity, lang);
 };
 
 export default function DemandSupply() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { user } = useAuth();
   const [commodities, setCommodities] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -77,7 +111,7 @@ export default function DemandSupply() {
               {items.map((c) => (
                 <button key={c.key} onClick={() => loadCommodity(c)} data-testid={`commodity-${c.key}`}
                   className="bg-white rounded-xl border border-[#0F3821]/10 p-4 text-left card-lift">
-                  <p className="font-medium text-sm">{cname(c)}</p>
+                  <p className="font-medium text-sm">{cname(c, lang)}</p>
                   <p className="text-xs text-[#7C8D81]">{t(c.category)}</p>
                 </button>
               ))}
@@ -89,7 +123,9 @@ export default function DemandSupply() {
       {selected && (
         <div className="space-y-5 fade-up">
           <button onClick={() => setSelected(null)} className={btnSecondary} data-testid="commodity-back-btn">← {t("back")}</button>
-          <h2 className="font-heading text-xl font-bold">{cname(selected)} — {t("who_needs")}</h2>
+          <h2 className="font-heading text-xl font-bold">
+  {cname(selected, lang)} — {t("who_needs")}
+</h2>
           {demand === null ? <SkeletonCard /> : demand.length === 0 ? (
             <EmptyState icon={Handshake} title={t("no_data")} subtitle={t("no_demand_empty")}
               action={user.role === "farmer" ? <button onClick={() => { setModal("harvest"); setForm({ commodity: selected.name, unit: "quintal" }); }} className={btnPrimary} data-testid="empty-declare-harvest-btn">{t("declare_harvest")}</button> : null} />

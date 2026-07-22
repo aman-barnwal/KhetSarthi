@@ -217,32 +217,133 @@ FAQS = [
 ]
 
 COMMODITIES = [
+    # ============================================================
+    # VEGETABLES / सब्जियां
+    # ============================================================
+
     {"key": "tomato", "name": "Tomato", "name_hi": "टमाटर", "category": "vegetables"},
     {"key": "potato", "name": "Potato", "name_hi": "आलू", "category": "vegetables"},
     {"key": "onion", "name": "Onion", "name_hi": "प्याज", "category": "vegetables"},
     {"key": "cauliflower", "name": "Cauliflower", "name_hi": "फूलगोभी", "category": "vegetables"},
     {"key": "cabbage", "name": "Cabbage", "name_hi": "पत्तागोभी", "category": "vegetables"},
-    {"key": "brinjal", "name": "Brinjal", "name_hi": "बैंगन", "category": "vegetables"},
+    {"key": "brinjal", "name": "Brinjal (Eggplant)", "name_hi": "बैंगन", "category": "vegetables"},
     {"key": "okra", "name": "Bhindi (Okra)", "name_hi": "भिंडी", "category": "vegetables"},
     {"key": "green_chilli", "name": "Green Chilli", "name_hi": "हरी मिर्च", "category": "vegetables"},
+    {"key": "capsicum", "name": "Capsicum", "name_hi": "शिमला मिर्च", "category": "vegetables"},
+    {"key": "green_peas", "name": "Green Peas", "name_hi": "हरी मटर", "category": "vegetables"},
+    {"key": "french_beans", "name": "French Beans", "name_hi": "फ्रेंच बीन्स", "category": "vegetables"},
+    {"key": "cluster_beans", "name": "Cluster Beans (Guar)", "name_hi": "ग्वार फली", "category": "vegetables"},
+    {"key": "cowpea", "name": "Cowpea", "name_hi": "लोबिया", "category": "vegetables"},
+
+    {"key": "bottle_gourd", "name": "Bottle Gourd", "name_hi": "लौकी", "category": "vegetables"},
+    {"key": "bitter_gourd", "name": "Bitter Gourd", "name_hi": "करेला", "category": "vegetables"},
+    {"key": "ridge_gourd", "name": "Ridge Gourd", "name_hi": "तोरई", "category": "vegetables"},
+    {"key": "sponge_gourd", "name": "Sponge Gourd", "name_hi": "नेनुआ", "category": "vegetables"},
+    {"key": "pointed_gourd", "name": "Pointed Gourd (Parwal)", "name_hi": "परवल", "category": "vegetables"},
+    {"key": "ivy_gourd", "name": "Ivy Gourd (Kundru)", "name_hi": "कुंदरू", "category": "vegetables"},
+    {"key": "snake_gourd", "name": "Snake Gourd", "name_hi": "चिचिंडा", "category": "vegetables"},
+    {"key": "ash_gourd", "name": "Ash Gourd", "name_hi": "पेठा", "category": "vegetables"},
+    {"key": "pumpkin", "name": "Pumpkin", "name_hi": "कद्दू", "category": "vegetables"},
+    {"key": "cucumber", "name": "Cucumber", "name_hi": "खीरा", "category": "vegetables"},
+
+    {"key": "radish", "name": "Radish", "name_hi": "मूली", "category": "vegetables"},
+    {"key": "carrot", "name": "Carrot", "name_hi": "गाजर", "category": "vegetables"},
+    {"key": "beetroot", "name": "Beetroot", "name_hi": "चुकंदर", "category": "vegetables"},
+    {"key": "turnip", "name": "Turnip", "name_hi": "शलजम", "category": "vegetables"},
+    {"key": "sweet_potato", "name": "Sweet Potato", "name_hi": "शकरकंद", "category": "vegetables"},
+    {"key": "yam", "name": "Yam", "name_hi": "जिमीकंद", "category": "vegetables"},
+    {"key": "colocasia", "name": "Colocasia (Arbi)", "name_hi": "अरबी", "category": "vegetables"},
+
+    {"key": "spinach", "name": "Spinach", "name_hi": "पालक", "category": "vegetables"},
+    {"key": "fenugreek_leaves", "name": "Fenugreek Leaves", "name_hi": "मेथी", "category": "vegetables"},
+    {"key": "mustard_greens", "name": "Mustard Greens", "name_hi": "सरसों का साग", "category": "vegetables"},
+    {"key": "amaranth_leaves", "name": "Amaranth Leaves", "name_hi": "चौलाई साग", "category": "vegetables"},
+    {"key": "bathua", "name": "Bathua", "name_hi": "बथुआ", "category": "vegetables"},
+
+    {"key": "drumstick", "name": "Drumstick (Moringa)", "name_hi": "सहजन", "category": "vegetables"},
+    {"key": "jackfruit_raw", "name": "Raw Jackfruit", "name_hi": "कच्चा कटहल", "category": "vegetables"},
+    {"key": "raw_banana", "name": "Raw Banana", "name_hi": "कच्चा केला", "category": "vegetables"},
+    {"key": "green_papaya", "name": "Green Papaya", "name_hi": "कच्चा पपीता", "category": "vegetables"},
+    {"key": "mushroom", "name": "Mushroom", "name_hi": "मशरूम", "category": "vegetables"},
+
+
+    # ============================================================
+    # FRUITS / फल
+    # ============================================================
+
     {"key": "mango", "name": "Mango", "name_hi": "आम", "category": "fruits"},
     {"key": "banana", "name": "Banana", "name_hi": "केला", "category": "fruits"},
     {"key": "guava", "name": "Guava", "name_hi": "अमरूद", "category": "fruits"},
     {"key": "papaya", "name": "Papaya", "name_hi": "पपीता", "category": "fruits"},
+    {"key": "jackfruit", "name": "Jackfruit", "name_hi": "कटहल", "category": "fruits"},
+    {"key": "litchi", "name": "Litchi", "name_hi": "लीची", "category": "fruits"},
+    {"key": "watermelon", "name": "Watermelon", "name_hi": "तरबूज", "category": "fruits"},
+    {"key": "muskmelon", "name": "Muskmelon", "name_hi": "खरबूजा", "category": "fruits"},
+    {"key": "lemon", "name": "Lemon", "name_hi": "नींबू", "category": "fruits"},
+    {"key": "orange", "name": "Orange", "name_hi": "संतरा", "category": "fruits"},
+    {"key": "pomegranate", "name": "Pomegranate", "name_hi": "अनार", "category": "fruits"},
+    {"key": "pineapple", "name": "Pineapple", "name_hi": "अनानास", "category": "fruits"},
+    {"key": "custard_apple", "name": "Custard Apple", "name_hi": "सीताफल", "category": "fruits"},
+    {"key": "ber", "name": "Indian Jujube (Ber)", "name_hi": "बेर", "category": "fruits"},
+    {"key": "amla", "name": "Indian Gooseberry (Amla)", "name_hi": "आंवला", "category": "fruits"},
+
+
+    # ============================================================
+    # GRAINS / अनाज
+    # ============================================================
+
     {"key": "wheat", "name": "Wheat", "name_hi": "गेहूं", "category": "grains"},
     {"key": "paddy", "name": "Paddy (Rice)", "name_hi": "धान (चावल)", "category": "grains"},
     {"key": "maize", "name": "Maize", "name_hi": "मक्का", "category": "grains"},
-    {"key": "bajra", "name": "Bajra", "name_hi": "बाजरा", "category": "grains"},
+    {"key": "bajra", "name": "Bajra (Pearl Millet)", "name_hi": "बाजरा", "category": "grains"},
+    {"key": "jowar", "name": "Jowar (Sorghum)", "name_hi": "ज्वार", "category": "grains"},
+    {"key": "ragi", "name": "Ragi (Finger Millet)", "name_hi": "रागी (मड़ुआ)", "category": "grains"},
+    {"key": "barley", "name": "Barley", "name_hi": "जौ", "category": "grains"},
+
+
+    # ============================================================
+    # PULSES / दालें
+    # ============================================================
+
     {"key": "arhar", "name": "Arhar (Tur) Dal", "name_hi": "अरहर (तूर) दाल", "category": "pulses"},
     {"key": "moong", "name": "Moong Dal", "name_hi": "मूंग दाल", "category": "pulses"},
     {"key": "chana", "name": "Chana (Gram)", "name_hi": "चना", "category": "pulses"},
     {"key": "masoor", "name": "Masoor Dal", "name_hi": "मसूर दाल", "category": "pulses"},
+    {"key": "urad", "name": "Urad Dal", "name_hi": "उड़द दाल", "category": "pulses"},
+    {"key": "field_pea", "name": "Field Pea", "name_hi": "मटर दाल", "category": "pulses"},
+    {"key": "kulthi", "name": "Horse Gram (Kulthi)", "name_hi": "कुल्थी", "category": "pulses"},
+
+
+    # ============================================================
+    # SPICES / मसाले
+    # ============================================================
+
     {"key": "turmeric", "name": "Turmeric", "name_hi": "हल्दी", "category": "spices"},
     {"key": "ginger", "name": "Ginger", "name_hi": "अदरक", "category": "spices"},
     {"key": "garlic", "name": "Garlic", "name_hi": "लहसुन", "category": "spices"},
     {"key": "coriander", "name": "Coriander", "name_hi": "धनिया", "category": "spices"},
+    {"key": "dry_chilli", "name": "Dry Red Chilli", "name_hi": "सूखी लाल मिर्च", "category": "spices"},
+    {"key": "cumin", "name": "Cumin", "name_hi": "जीरा", "category": "spices"},
+    {"key": "fenugreek_seed", "name": "Fenugreek Seed", "name_hi": "मेथी दाना", "category": "spices"},
+
+
+    # ============================================================
+    # OILSEEDS / तिलहन
+    # ============================================================
+
     {"key": "mustard", "name": "Mustard", "name_hi": "सरसों", "category": "oilseeds"},
     {"key": "groundnut", "name": "Groundnut", "name_hi": "मूंगफली", "category": "oilseeds"},
     {"key": "soybean", "name": "Soybean", "name_hi": "सोयाबीन", "category": "oilseeds"},
+    {"key": "sesame", "name": "Sesame", "name_hi": "तिल", "category": "oilseeds"},
+    {"key": "linseed", "name": "Linseed (Flaxseed)", "name_hi": "अलसी", "category": "oilseeds"},
+    {"key": "niger_seed", "name": "Niger Seed", "name_hi": "रामतिल", "category": "oilseeds"},
+
+
+    # ============================================================
+    # OTHER AGRICULTURAL PRODUCE / अन्य
+    # ============================================================
+
     {"key": "sugarcane", "name": "Sugarcane", "name_hi": "गन्ना", "category": "other"},
+    {"key": "tamarind", "name": "Tamarind", "name_hi": "इमली", "category": "other"},
+    {"key": "mahua", "name": "Mahua", "name_hi": "महुआ", "category": "other"},
 ]
