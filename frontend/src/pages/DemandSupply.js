@@ -8,6 +8,18 @@ import { toast } from "sonner";
 
 const CAT_ICONS = { vegetables: Carrot, fruits: Orange, grains: Grains, pulses: GrainsSlash, spices: Pepper, oilseeds: Plant, other: Package };
 
+const UNIT_LABELS = {
+  quintal: { en: "Quintal", hi: "क्विंटल" },
+  kg: { en: "kg", hi: "किलोग्राम" },
+  tonne: { en: "Tonne", hi: "टन" },
+  crate: { en: "Crate", hi: "क्रेट" },
+  dozen: { en: "Dozen", hi: "दर्जन" },
+};
+
+const unitName = (unit, lang) => {
+  return UNIT_LABELS[unit]?.[lang === "hi" ? "hi" : "en"] || unit;
+};
+
 const cname = (commodity, lang) => {
   if (!commodity) return "";
 
@@ -92,7 +104,13 @@ export default function DemandSupply() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("demand_supply")} subtitle="Demand Before Harvest — match buyers and farmers before produce becomes perishable."
+      <PageHeader
+  title={t("demand_supply")}
+  subtitle={
+    lang === "hi"
+      ? "फसल कटाई से पहले मांग — उपज खराब होने से पहले किसानों और खरीदारों को जोड़ें।"
+      : "Demand Before Harvest — match buyers and farmers before produce becomes perishable."
+  }
         action={
           <div className="flex gap-2">
             {isVendor && <button onClick={() => { setModal("demand"); setForm({ commodity: selected?.name || "", unit: "quintal" }); }} className={btnPrimary} data-testid="post-demand-btn"><Plus size={16} />{t("post_demand")}</button>}
