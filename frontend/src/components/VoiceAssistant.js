@@ -28,14 +28,82 @@ export default function VoiceAssistant() {
   const [error, setError] = useState("");
   const recRef = useRef(null);
 
-  const speak = useCallback((text) => {
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text.replace(/\*\*?/g, "").slice(0, 400));
-      u.lang = langMeta.speech;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* unsupported */ }
-  }, [langMeta]);
+const speak = useCallback((text) => {
+  try {
+    // Stop anything currently being spoken
+    window.speechSynthesis.cancel();
+
+    // Clean Markdown/symbols that should not be spoken
+    const cleanText = text
+      .replace(/\*\*?/g, "")
+      .replace(/#{1,6}\s?/g, "")
+      .replace(/[`*_~]/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      .trim();
+
+    if (!cleanText) return;
+
+    // Split naturally at sentence boundaries.
+    // Includes Hindi danda "।"
+    const sentences =
+      cleanText.match(/[^.!?।]+[.!?।]+|[^.!?।]+$/g) || [cleanText];
+
+    // Create smaller chunks for reliable browser speech synthesis
+    const chunks = [];
+    let current = "";
+
+    for (const sentence of sentences) {
+      const next = `${current} ${sentence}`.trim();
+
+      if (next.length > 300 && current) {
+        chunks.push(current.trim());
+        current = sentence.trim();
+      } else {
+        current = next;
+      }
+    }
+
+    if (current.trim()) {
+      chunks.push(current.trim());
+    }
+
+    // Speak ALL chunks one after another
+    const speakChunk = (index) => {
+      if (index >= chunks.length) return;
+
+      const utterance = new SpeechSynthesisUtterance(chunks[index]);
+
+      // Uses selected KhetSaarthi language:
+      // hi-IN, en-IN, etc.
+      utterance.lang = langMeta.speech;
+
+      utterance.onend = () => {
+        speakChunk(index + 1);
+      };
+
+      utterance.onerror = (event) => {
+        // "interrupted" / "canceled" are normal when user presses stop
+        if (
+          event.error !== "interrupted" &&
+          event.error !== "canceled"
+        ) {
+          console.error(
+            "Speech synthesis error:",
+            event.error,
+            event
+          );
+        }
+      };
+
+      window.speechSynthesis.speak(utterance);
+    };
+
+    speakChunk(0);
+
+  } catch (e) {
+    console.error("Speech synthesis failed:", e);
+  }
+}, [langMeta]);
 
   const handleQuery = useCallback(async (text) => {
     const lower = text.toLowerCase();
