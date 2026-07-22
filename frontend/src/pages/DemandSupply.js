@@ -153,14 +153,18 @@ export default function DemandSupply() {
                 <div key={d.id} className="bg-white rounded-xl border border-[#0F3821]/10 p-5 card-lift" data-testid={`demand-card-${d.id}`}>
                   <div className="flex justify-between items-start gap-2">
                     <div>
-                      <p className="font-heading font-semibold">{d.quantity} {d.unit} · {dispName(d.commodity)}</p>
+                      <p className="font-heading font-semibold">{d.quantity} {unitName(d.unit, lang)} · {dispName(d.commodity, lang, commodities)}</p>
                       <p className="text-xs text-[#7C8D81] mt-0.5">{d.poster_name}{d.district ? ` · ${d.district}` : ""}{d.state ? `, ${d.state}` : ""}</p>
                     </div>
-                    {d.offered_price && <Badge tone="gold">₹{d.offered_price}/{d.unit}</Badge>}
+                    {d.offered_price && <Badge tone="gold">
+  ₹{d.offered_price}/{unitName(d.unit, lang)}
+</Badge>}
                   </div>
                   <div className="text-xs text-[#4A5D51] mt-3 space-y-0.5">
                     {d.required_by && <p>{t("required_by")}: {d.required_by}</p>}
-                    {d.quality_grade && <p>Grade: {d.quality_grade}</p>}
+                    {d.quality_grade && (
+  <p>{lang === "hi" ? "ग्रेड" : "Grade"}: {d.quality_grade}</p>
+)}
                     {d.notes && <p className="text-[#7C8D81]">{d.notes}</p>}
                   </div>
                   {user.role === "farmer" && (
@@ -173,12 +177,16 @@ export default function DemandSupply() {
 
           <h2 className="font-heading text-xl font-bold pt-2">{t("expected_harvest")}</h2>
           {harvests === null ? <SkeletonCard /> : harvests.length === 0 ? (
-            <p className="text-sm text-[#7C8D81]">No expected harvests declared for {selected.name} yet.</p>
+            <p className="text-sm text-[#7C8D81]">
+  {lang === "hi"
+    ? `${cname(selected, lang)} के लिए अभी तक कोई अपेक्षित फसल घोषित नहीं की गई है।`
+    : `No expected harvests declared for ${cname(selected, lang)} yet.`}
+</p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {harvests.map((h) => (
                 <div key={h.id} className="bg-white rounded-xl border border-[#0F3821]/10 p-5" data-testid={`harvest-card-${h.id}`}>
-                  <p className="font-heading font-semibold">{h.expected_quantity} {h.unit} · {dispName(h.commodity)}</p>
+                  <p className="font-heading font-semibold">{h.expected_quantity} {unitName(h.unit, lang)} · {dispName(h.commodity, lang, commodities)}</p>
                   <p className="text-xs text-[#7C8D81] mt-0.5">{h.farmer_name}{h.district ? ` · ${h.district}` : ""}</p>
                   {h.harvest_window_start && <p className="text-xs text-[#4A5D51] mt-2">{t("harvest_window")}: {h.harvest_window_start} → {h.harvest_window_end || "?"}</p>}
                 </div>
@@ -199,7 +207,11 @@ export default function DemandSupply() {
             </div>
             {modal?.enquiry ? (
               <Field label={t("note")}>
-                <textarea required className={inputCls} rows={3} placeholder="I can supply this. My expected quantity and price..." onChange={(e) => setForm({ message: e.target.value })} data-testid="enquiry-message-input" />
+                <textarea required className={inputCls} rows={3} placeholder={
+  lang === "hi"
+    ? "मैं इसकी आपूर्ति कर सकता/सकती हूँ। मेरी अपेक्षित मात्रा और कीमत..."
+    : "I can supply this. My expected quantity and price..."
+} onChange={(e) => setForm({ message: e.target.value })} data-testid="enquiry-message-input" />
               </Field>
             ) : (
               <>
@@ -212,9 +224,18 @@ export default function DemandSupply() {
                       onChange={(e) => setForm({ ...form, [modal === "demand" ? "quantity" : "expected_quantity"]: parseFloat(e.target.value) })} data-testid="modal-quantity-input" />
                   </Field>
                   <Field label={t("unit")}>
-                    <select className={inputCls} value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} data-testid="modal-unit-select">
-                      {["quintal", "kg", "tonne", "crate", "dozen"].map((u) => <option key={u}>{u}</option>)}
-                    </select>
+                    <select
+  className={inputCls}
+  value={form.unit}
+  onChange={(e) => setForm({ ...form, unit: e.target.value })}
+  data-testid="modal-unit-select"
+>
+  {["quintal", "kg", "tonne", "crate", "dozen"].map((u) => (
+    <option key={u} value={u}>
+      {unitName(u, lang)}
+    </option>
+  ))}
+</select>
                   </Field>
                 </div>
                 {modal === "demand" ? (
@@ -224,8 +245,8 @@ export default function DemandSupply() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label={`${t("harvest_window")} (from)`}><input type="date" className={inputCls} onChange={(e) => setForm({ ...form, harvest_window_start: e.target.value })} data-testid="modal-window-start" /></Field>
-                    <Field label="(to)"><input type="date" className={inputCls} onChange={(e) => setForm({ ...form, harvest_window_end: e.target.value })} data-testid="modal-window-end" /></Field>
+                    <Field label={`${t("harvest_window")} ${lang === "hi" ? "(से)" : "(from)"}`}><input type="date" className={inputCls} onChange={(e) => setForm({ ...form, harvest_window_start: e.target.value })} data-testid="modal-window-start" /></Field>
+                    <Field label={lang === "hi" ? "(तक)" : "(to)"}><input type="date" className={inputCls} onChange={(e) => setForm({ ...form, harvest_window_end: e.target.value })} data-testid="modal-window-end" /></Field>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-3">
