@@ -157,16 +157,16 @@ const speak = useCallback((text) => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { setError(t("voice_unsupported")); return; }
     const rec = new SR();
+    rec.continuous = true;
     recRef.current = rec;
     rec.lang = langMeta.speech;
     rec.interimResults = true;
     rec.onresult = (e) => {
       const text = Array.from(e.results).map((r) => r[0].transcript).join("");
       setTranscript(text);
-      if (e.results[e.results.length - 1].isFinal) {
-        setListening(false);
-        handleQuery(text);
-      }
+if (e.results[e.results.length - 1].isFinal) {
+  handleQuery(text);
+}
     };
     rec.onerror = (e) => {
       console.error("SpeechRecognition error:", e.error, e);
@@ -184,9 +184,9 @@ const speak = useCallback((text) => {
         setError(`Voice recognition failed: ${e.error || "unknown error"}`);
       }
     };
-    rec.onend = () => setListening(false);
-    rec.start();
-    setListening(true);
+rec.onend = () => {
+  setListening(false);
+};
   };
 
   const stopAll = () => {
