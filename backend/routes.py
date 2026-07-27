@@ -73,19 +73,50 @@ async def register(data: RegisterInput, response: Response):
 async def login(data: LoginInput, request: Request, response: Response):
     db = get_db()
     email = data.email.lower().strip()
+
     ip = request.client.host if request.client else "unknown"
     identifier = f"{ip}:{email}"
+
     await check_brute_force(db, identifier)
+
     user = await db.users.find_one({"email": email})
+
     if not user or not verify_password(data.password, user.get("password_hash", "")):
         await record_failed_login(db, identifier)
         raise HTTPException(status_code=401, detail="Incorrect email or password")
-    if not user.get("active", True):
-        raise HTTPException(status_code=403, detail="Account deactivated. Contact support.")
-    await clear_failed_logins(db, identifier)
-    set_auth_cookies(response, str(user["_id"]), email)
-    return public_user(user)
 
+    if not user.get("active", True):
+        raise HTTPException(status_code=403, detail="Account deactivated")
+
+    await clear_failed_logins(db, identifier)
+
+    access_token = create_access_token(str(user["_id"]), email)
+    refresh_token = create_refresh_token(str(user["_id"]))
+
+    response.set_cookie(
+        "access_token",
+        access_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=604800,
+    )
+
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=2592000,
+    )
+
+    data = public_user(user)
+    data["access_token"] = access_token
+
+    return data
 
 @router.post("/auth/logout")
 async def logout(response: Response):
