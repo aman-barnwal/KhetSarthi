@@ -31,8 +31,6 @@ FARMER_PWD = "Farmer@123"
 VENDOR_EMAIL = "vendor@test.com"
 VENDOR_PWD = "Vendor@123"
 
-
-# --------------------------- helpers ---------------------------
 def _session():
     s = requests.Session()
     s.headers.update({"Content-Type": "application/json"})
@@ -69,8 +67,6 @@ def _leaf_image_b64() -> str:
     img.save(buf, format="JPEG", quality=80)
     return base64.b64encode(buf.getvalue()).decode()
 
-
-# --------------------------- fixtures ---------------------------
 @pytest.fixture(scope="session")
 def admin_session():
     s = _session()
@@ -110,16 +106,12 @@ def vendor_session():
         user = r.json()
     return s, user
 
-
-# --------------------------- health ---------------------------
 class TestHealth:
     def test_health_ok(self):
         r = requests.get(f"{API}/health")
         assert r.status_code == 200
         assert r.json()["status"] == "ok"
 
-
-# --------------------------- auth ---------------------------
 class TestAuth:
     def test_admin_login_by_id(self):
         s = _session()
@@ -179,8 +171,6 @@ class TestAuth:
         r = s2.post(f"{API}/auth/login", json={"email": temp_email, "password": new_pwd})
         assert r.status_code == 200
 
-
-# --------------------------- role enforcement ---------------------------
 class TestRoleEnforcement:
     def test_farmer_cannot_create_demand(self, farmer_session):
         s, _ = farmer_session
@@ -202,8 +192,6 @@ class TestRoleEnforcement:
         r = s.get(f"{API}/admin/users")
         assert r.status_code == 403
 
-
-# --------------------------- demand & supply ---------------------------
 class TestDemandSupply:
     def test_vendor_posts_demand_farmer_gets_notified(self, vendor_session, farmer_session):
         s_v, uv = vendor_session
@@ -268,8 +256,6 @@ class TestDemandSupply:
         rows = r.json()
         assert any(row["commodity"] == commodity for row in rows)
 
-
-# --------------------------- marketplace ---------------------------
 class TestMarketplace:
     def test_farmer_creates_produce_listing_and_vendor_enquires(self, farmer_session, vendor_session):
         s_f, _ = farmer_session
@@ -303,8 +289,6 @@ class TestMarketplace:
         r = s_f.post(f"{API}/listings", json={"listing_type": "input", "title": "no", "category": "seed"})
         assert r.status_code == 403
 
-
-# --------------------------- mandi prices ---------------------------
 class TestMandiPrices:
     def test_prices_agmarknet(self):
         r = requests.get(f"{API}/prices", params={"commodity": "Tomato", "limit": 10})
@@ -326,8 +310,6 @@ class TestMandiPrices:
         r = s.delete(f"{API}/price-alerts/{aid}")
         assert r.status_code == 200
 
-
-# --------------------------- managed prices (admin) ---------------------------
 class TestManagedPrices:
     def test_admin_prices_crud_and_bulk(self, admin_session, farmer_session):
         s_a, _ = admin_session
@@ -368,8 +350,6 @@ class TestManagedPrices:
         r = s.post(f"{API}/admin/prices", json={"commodity": "X", "msp": 100})
         assert r.status_code == 403
 
-
-# --------------------------- admin vendors ---------------------------
 class TestAdminVendors:
     def test_admin_create_and_remove_vendor(self, admin_session):
         s_a, _ = admin_session
@@ -412,8 +392,6 @@ class TestAdminVendors:
         r = s2.post(f"{API}/auth/login", json={"email": vemail, "password": "Vendor@123"})
         assert r.status_code == 403
 
-
-# --------------------------- weather ---------------------------
 class TestWeather:
     def test_weather_current(self):
         r = requests.get(f"{API}/weather", params={"lat": 28.6, "lon": 77.2})
@@ -429,8 +407,6 @@ class TestWeather:
         assert isinstance(rows, list) and len(rows) >= 1
         assert "lat" in rows[0]
 
-
-# --------------------------- KrishiAI chat SSE ---------------------------
 class TestKrishiAI:
     def test_ai_status(self):
         r = requests.get(f"{API}/ai/status")
@@ -469,8 +445,6 @@ class TestKrishiAI:
         assert r.status_code == 200
         assert isinstance(r.json(), list)
 
-
-# --------------------------- Crop Scan (real image) ---------------------------
 class TestCropScan:
     def test_crop_scan_returns_structured(self, farmer_session):
         s, _ = farmer_session
@@ -492,8 +466,6 @@ class TestCropScan:
         assert r.status_code == 200
         assert isinstance(r.json(), list)
 
-
-# --------------------------- CRUD: crops/diary/expenses/reminders ---------------------------
 class TestCrudFlows:
     def test_crops_crud(self, farmer_session):
         s, _ = farmer_session
@@ -541,8 +513,6 @@ class TestCrudFlows:
         assert r.status_code == 200
         s.delete(f"{API}/reminders/{rid}")
 
-
-# --------------------------- schemes / search / notifications / profile ---------------------------
 class TestMisc:
     def test_schemes(self):
         r = requests.get(f"{API}/schemes")

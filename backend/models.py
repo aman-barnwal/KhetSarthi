@@ -32,8 +32,6 @@ class BaseDocument(BaseModel):
             return None
         return cls.model_validate(doc)
 
-
-# ---- Auth ----
 class RegisterInput(BaseModel):
     name: str = Field(min_length=2, max_length=80)
     email: EmailStr
@@ -64,8 +62,6 @@ class ProfileUpdate(BaseModel):
     notification_prefs: Optional[dict] = None
     location: Optional[dict] = None  # {lat, lon, village, district, state}
 
-
-# ---- Feature inputs ----
 class CropInput(BaseModel):
     name: str
     variety: Optional[str] = None

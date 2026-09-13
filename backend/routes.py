@@ -52,8 +52,6 @@ async def notify(db, user_id: str, ntype: str, title: str, body: str, link: str 
         "user_id": user_id, "type": ntype, "title": title, "body": body,
         "link": link, "read": False, "created_at": now_iso()})
 
-
-# ================= AUTH =================
 @router.post("/auth/register")
 async def register(data: RegisterInput, response: Response):
     db = get_db()
@@ -179,8 +177,6 @@ async def delete_account(user: dict = Depends(get_current_user)):
     await db.users.delete_one({"_id": user["_id"]})
     return {"ok": True}
 
-
-# ================= WEATHER & GEO =================
 @router.get("/weather")
 async def weather(lat: float, lon: float):
     try:
@@ -201,8 +197,6 @@ async def geocode_search(q: str):
     except Exception:
         raise HTTPException(status_code=503, detail="Location search unavailable")
 
-
-# ================= MANDI PRICES =================
 @router.get("/prices")
 async def prices(state: str = None, district: str = None, commodity: str = None,
                  limit: int = 50, offset: int = 0):
@@ -232,8 +226,6 @@ async def delete_price_alert(alert_id: str, user: dict = Depends(get_current_use
     await db.price_alerts.delete_one({"_id": oid(alert_id), "user_id": str(user["_id"])})
     return {"ok": True}
 
-
-# ================= AI =================
 @router.get("/ai/status")
 async def ai_status():
     return {"configured": AIService.configured()}
@@ -306,8 +298,6 @@ async def scan_history(user: dict = Depends(get_current_user)):
     docs = await db.scans.find({"user_id": str(user["_id"])}, {"image_base64": 0}).sort("created_at", -1).to_list(50)
     return [serialize(d) for d in docs]
 
-
-# ================= CROPS / DIARY / EXPENSES / REMINDERS =================
 async def _crud_create(coll, data, user):
     db = get_db()
     doc = data.model_dump(exclude_none=True)
@@ -425,8 +415,6 @@ async def delete_reminder(rid: str, user: dict = Depends(get_current_user)):
     await db.reminders.delete_one({"_id": oid(rid), "user_id": str(user["_id"])})
     return {"ok": True}
 
-
-# ================= DEMAND & SUPPLY =================
 @router.get("/commodities")
 async def commodities():
     return COMMODITIES
@@ -544,8 +532,6 @@ async def my_matches(user: dict = Depends(get_current_user)):
                 out.append(s)
         return out[:50]
 
-
-# ================= MARKETPLACE =================
 @router.post("/listings")
 async def create_listing(data: ListingInput, user: dict = Depends(get_current_user)):
     db = get_db()
@@ -654,8 +640,6 @@ async def update_enquiry(eid: str, payload: dict, user: dict = Depends(get_curre
     await notify(db, other, "enquiry_update", "Enquiry status updated", f"'{enquiry['subject']}' is now {status}", "/market")
     return {"ok": True}
 
-
-# ================= VENDOR DIRECTORY =================
 @router.get("/vendors")
 async def vendor_directory(category: str = None, q: str = None, verified_only: bool = False,
                            user: dict = Depends(get_current_user)):
@@ -678,8 +662,6 @@ async def vendor_directory(category: str = None, q: str = None, verified_only: b
                     "verified": d.get("verified", False)})
     return out
 
-
-# ================= NOTIFICATIONS =================
 @router.get("/notifications")
 async def list_notifications(user: dict = Depends(get_current_user)):
     db = get_db()
@@ -700,8 +682,6 @@ async def read_notification(nid: str, user: dict = Depends(get_current_user)):
     await db.notifications.update_one({"_id": oid(nid), "user_id": str(user["_id"])}, {"$set": {"read": True}})
     return {"ok": True}
 
-
-# ================= SCHEMES / FAQ / SEARCH =================
 @router.get("/schemes")
 async def schemes(category: str = None):
     items = SCHEMES
@@ -737,8 +717,6 @@ async def global_search(q: str = Query(min_length=2), user: dict = Depends(get_c
                           for v in vendors if ql in ((v.get("vendor_profile") or {}).get("business_name") or v["name"]).lower()][:5]
     return results
 
-
-# ================= DASHBOARD =================
 @router.get("/dashboard")
 async def dashboard(user: dict = Depends(get_current_user)):
     db = get_db()
@@ -781,8 +759,6 @@ async def dashboard(user: dict = Depends(get_current_user)):
     else:
         return {"role": user.get("role"), "unread_notifications": unread}
 
-
-# ================= ADMIN =================
 @router.get("/admin/stats")
 async def admin_stats(user: dict = Depends(require_role("admin"))):
     db = get_db()
@@ -832,8 +808,6 @@ async def admin_moderation(user: dict = Depends(require_role("admin"))):
     demands = await db.demand_posts.find({}).sort("created_at", -1).to_list(100)
     return {"listings": [serialize(d) for d in listings], "demand": [serialize(d) for d in demands]}
 
-
-# ---- Managed reference prices (admin-curated: MSP / market / FPO rates) ----
 @router.get("/managed-prices")
 async def managed_prices(user: dict = Depends(get_current_user)):
     db = get_db()
@@ -895,8 +869,6 @@ async def bulk_update_prices(data: BulkPriceUpdate, user: dict = Depends(require
         updated += 1
     return {"ok": True, "updated": updated}
 
-
-# ---- Admin vendor management ----
 @router.post("/admin/vendors")
 async def admin_create_vendor(data: VendorCreateInput, user: dict = Depends(require_role("admin"))):
     db = get_db()

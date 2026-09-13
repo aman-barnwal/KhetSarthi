@@ -217,9 +217,8 @@ FAQS = [
 ]
 
 COMMODITIES = [
-    # ============================================================
+
     # VEGETABLES / सब्जियां
-    # ============================================================
 
     {"key": "tomato", "name": "Tomato", "name_hi": "टमाटर", "category": "vegetables"},
     {"key": "potato", "name": "Potato", "name_hi": "आलू", "category": "vegetables"},
@@ -266,10 +265,7 @@ COMMODITIES = [
     {"key": "green_papaya", "name": "Green Papaya", "name_hi": "कच्चा पपीता", "category": "vegetables"},
     {"key": "mushroom", "name": "Mushroom", "name_hi": "मशरूम", "category": "vegetables"},
 
-
-    # ============================================================
     # FRUITS / फल
-    # ============================================================
 
     {"key": "mango", "name": "Mango", "name_hi": "आम", "category": "fruits"},
     {"key": "banana", "name": "Banana", "name_hi": "केला", "category": "fruits"},
@@ -287,10 +283,7 @@ COMMODITIES = [
     {"key": "ber", "name": "Indian Jujube (Ber)", "name_hi": "बेर", "category": "fruits"},
     {"key": "amla", "name": "Indian Gooseberry (Amla)", "name_hi": "आंवला", "category": "fruits"},
 
-
-    # ============================================================
     # GRAINS / अनाज
-    # ============================================================
 
     {"key": "wheat", "name": "Wheat", "name_hi": "गेहूं", "category": "grains"},
     {"key": "paddy", "name": "Paddy (Rice)", "name_hi": "धान (चावल)", "category": "grains"},
@@ -300,10 +293,7 @@ COMMODITIES = [
     {"key": "ragi", "name": "Ragi (Finger Millet)", "name_hi": "रागी (मड़ुआ)", "category": "grains"},
     {"key": "barley", "name": "Barley", "name_hi": "जौ", "category": "grains"},
 
-
-    # ============================================================
     # PULSES / दालें
-    # ============================================================
 
     {"key": "arhar", "name": "Arhar (Tur) Dal", "name_hi": "अरहर (तूर) दाल", "category": "pulses"},
     {"key": "moong", "name": "Moong Dal", "name_hi": "मूंग दाल", "category": "pulses"},
@@ -313,10 +303,7 @@ COMMODITIES = [
     {"key": "field_pea", "name": "Field Pea", "name_hi": "मटर दाल", "category": "pulses"},
     {"key": "kulthi", "name": "Horse Gram (Kulthi)", "name_hi": "कुल्थी", "category": "pulses"},
 
-
-    # ============================================================
     # SPICES / मसाले
-    # ============================================================
 
     {"key": "turmeric", "name": "Turmeric", "name_hi": "हल्दी", "category": "spices"},
     {"key": "ginger", "name": "Ginger", "name_hi": "अदरक", "category": "spices"},
@@ -326,10 +313,7 @@ COMMODITIES = [
     {"key": "cumin", "name": "Cumin", "name_hi": "जीरा", "category": "spices"},
     {"key": "fenugreek_seed", "name": "Fenugreek Seed", "name_hi": "मेथी दाना", "category": "spices"},
 
-
-    # ============================================================
     # OILSEEDS / तिलहन
-    # ============================================================
 
     {"key": "mustard", "name": "Mustard", "name_hi": "सरसों", "category": "oilseeds"},
     {"key": "groundnut", "name": "Groundnut", "name_hi": "मूंगफली", "category": "oilseeds"},
@@ -338,10 +322,7 @@ COMMODITIES = [
     {"key": "linseed", "name": "Linseed (Flaxseed)", "name_hi": "अलसी", "category": "oilseeds"},
     {"key": "niger_seed", "name": "Niger Seed", "name_hi": "रामतिल", "category": "oilseeds"},
 
-
-    # ============================================================
     # OTHER AGRICULTURAL PRODUCE / अन्य
-    # ============================================================
 
     {"key": "sugarcane", "name": "Sugarcane", "name_hi": "गन्ना", "category": "other"},
     {"key": "tamarind", "name": "Tamarind", "name_hi": "इमली", "category": "other"},
